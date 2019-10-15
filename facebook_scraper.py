@@ -35,13 +35,17 @@ _image_regex = re.compile(
 )
 _image_regex_lq = re.compile(r"background-image: url\('(.+)'\)")
 _post_url_regex = re.compile(r'/story.php\?story_fbid=')
+_author_id_regex = re.compile(r"\&id=(\d+?)")
 
 
-def get_posts(account, pages=10, timeout=5, sleep=0):
+def get_posts(account, pages=10, timeout=5, sleep=0, is_group=False):
     """Gets posts for a given account."""
     global _session, _timeout
 
-    url = f'{_base_url}/{account}/posts/'
+    if is_group:
+        url = f'{_base_url}/groups/{account}/'
+    else:
+        url = f'{_base_url}/{account}/posts/'
 
     _session = HTMLSession()
     _session.headers.update(_headers)
@@ -81,6 +85,7 @@ def get_posts(account, pages=10, timeout=5, sleep=0):
 
 def _extract_post(article):
     text, post_text, shared_text = _extract_text(article)
+    post_url = _extract_post_url(article)
     return {
         'post_id': _extract_post_id(article),
         'text': text,
@@ -91,8 +96,9 @@ def _extract_post(article):
         'likes': _find_and_search(article, 'footer', _likes_regex, _parse_int) or 0,
         'comments': _find_and_search(article, 'footer', _comments_regex, _parse_int) or 0,
         'shares':  _find_and_search(article, 'footer', _shares_regex, _parse_int) or 0,
-        'post_url': _extract_post_url(article),
+        'post_url': post_url,
         'link': _extract_link(article),
+        'author_id': _extract_author_id(post_url),
     }
 
 
@@ -201,6 +207,12 @@ def _extract_post_url(article):
             path = _filter_query_params(href, whitelist=query_params)
             return f'{_base_url}{path}'
 
+    return None
+
+def _extract_author_id(post_url):
+    match = _author_id_regex.search(post_url)
+    if match:
+        return urlparse.unquote(match.groups()[0])
     return None
 
 
