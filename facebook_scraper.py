@@ -35,7 +35,7 @@ _image_regex = re.compile(
 )
 _image_regex_lq = re.compile(r"background-image: url\('(.+)'\)")
 _post_url_regex = re.compile(r'/story.php\?story_fbid=')
-_author_id_regex = re.compile(r"\&id=(\d+?)")
+_author_id_regex = re.compile(r"\&id=(\d+)")
 
 
 def get_posts(account, pages=10, timeout=5, sleep=0, is_group=False):
