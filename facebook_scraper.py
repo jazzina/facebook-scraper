@@ -211,12 +211,10 @@ def _extract_link(article):
 def _extract_post_url(article):
     query_params = ('story_fbid', 'id')
 
-    elements = article.find('header a')
-    for element in elements:
-        href = element.attrs.get('href', '')
-        match = _post_url_regex.match(href)
+    for l in article.links:
+        match = _post_url_regex.match(l)
         if match:
-            path = _filter_query_params(href, whitelist=query_params)
+            path = _filter_query_params(l, whitelist=query_params)
             return f'{_base_url}{path}'
 
     return None
