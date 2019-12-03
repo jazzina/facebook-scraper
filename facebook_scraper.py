@@ -9,7 +9,7 @@ from urllib import parse as urlparse
 from requests import RequestException
 from requests_html import HTML, HTMLSession
 
-__all__ = ['get_posts']
+__all__ = ['get_posts', 'get_query']
 
 
 _base_url = 'https://m.facebook.com'
@@ -40,12 +40,24 @@ _author_id_regex = re.compile(r"\&id=(\d+)")
 
 def get_posts(account, pages=10, timeout=5, sleep=0, is_group=False):
     """Gets posts for a given account."""
-    global _session, _timeout
 
     if is_group:
         url = f'{_base_url}/groups/{account}/'
     else:
         url = f'{_base_url}/{account}/posts/'
+    return _get_posts(url, pages=pages, sleep=sleep)
+
+def get_query(query, pages=10, timeout=5, sleep=0):
+    """Gets posts for a given account."""
+
+    url = f'{_base_url}/search/top/?q={query}'
+    return _get_posts(url, pages=pages, sleep=sleep)
+
+
+# https://m.facebook.com/search/top/?q=trump
+
+def _get_posts(url, pages=10, timeout=5, sleep=0):
+    global _session, _timeout
 
     _session = HTMLSession()
     _session.headers.update(_headers)
@@ -210,9 +222,14 @@ def _extract_post_url(article):
     return None
 
 def _extract_author_id(post_url):
-    match = _author_id_regex.search(post_url)
-    if match:
-        return urlparse.unquote(match.groups()[0])
+    if not post_url:
+        return None
+    try:
+        match = _author_id_regex.search(post_url)
+        if match:
+            return urlparse.unquote(match.groups()[0])
+    except TypeError:
+        return None
     return None
 
 
