@@ -35,6 +35,7 @@ _image_regex = re.compile(
 )
 _image_regex_lq = re.compile(r"background-image: url\('(.+)'\)")
 _post_url_regex = re.compile(r'/story.php\?story_fbid=')
+_post_url_alter_regex = re.compile(r'mf_story_key\.(\d+).*?content_owner_id_new\.(\d+)')
 _author_id_regex = re.compile(r"\&id=(\d+)")
 
 
@@ -217,7 +218,14 @@ def _extract_post_url(article):
             path = _filter_query_params(l, whitelist=query_params)
             return f'{_base_url}{path}'
 
+    for l in article.links:
+        match = _post_url_alter_regex.search(l)
+        if match:
+            story, owner_id = match.groups()[0], match.groups()[1]
+            return f'{_base_url}/story_fbid={story}&id={owner_id}'
+
     return None
+
 
 def _extract_author_id(post_url):
     if not post_url:
